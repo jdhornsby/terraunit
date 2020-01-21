@@ -1,0 +1,29 @@
+{
+  "name": "terraunit",
+  "version": "1.0.0",
+  "description": "A library for unit testing Terraform modules.",
+  "main": "terraunit.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdhornsby/terraunit.git"
+  },
+  "keywords": [
+    "Terraform",
+    "testing"
+  ],
+  "author": "jdhornsby",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jdhornsby/terraunit/issues"
+  },
+  "homepage": "https://github.com/jdhornsby/terraunit#readme",
+  "devDependencies": {
+    "jest": "^24.9.0"
+  },
+  "dependencies": {
+    "execa": "^4.0.0"
+  }
+}
