@@ -3,9 +3,13 @@ const fs = require('fs').promises;
 const path = require('path');
 const execa = require('execa');
 
-const _getMockAWSProvider = () => {
+const _getMockAWSProvider = (alias) => {
+    if(alias) {
+        alias = `alias                       = "${alias}"`;
+    }
     return `
 provider "aws" {
+    ${alias}
     region                      = "us-east-1"
     skip_credentials_validation = true
     skip_requesting_account_id  = true
@@ -180,6 +184,7 @@ Terraunit.prototype.plan = async (options) => {
         terraform = [],
         workingDirectory = process.cwd(),
         mockAWSProvider = true,
+        mockAWSProviderAlias = '',
         debug = false
     } = options || {};
 
@@ -188,7 +193,7 @@ Terraunit.prototype.plan = async (options) => {
     }
 
     if(mockAWSProvider) {
-        terraform.push(_getMockAWSProvider());
+        terraform.push(_getMockAWSProvider(mockAWSProviderAlias));
     }
 
     const dir = path.join(workingDirectory, '__terraunit__');
