@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs').promises;
 const path = require('path');
 const execa = require('execa');
+const ci = require('ci-info');
 
 const _getMockAWSProvider = (alias) => {
     if(alias) {
@@ -157,16 +158,6 @@ provider "aws" {
 `;
 };
 
-const _cleanupDir = async (dir) => {
-    await fs.mkdir(dir, { recursive: true });
-    const files = await fs.readdir(dir);
-    for(file of files) {
-        if(file != '.terraform') {
-            await fs.unlink(path.join(dir, file));
-        }
-    }
-};
-
 function Terraunit() {
 };
 
@@ -207,35 +198,36 @@ Terraunit.prototype.plan = async (options) => {
     }
 
     const dir = path.join(workingDirectory, '__terraunit__');
-    let logs = '';
     try {
-        await _cleanupDir(dir);
+        await fs.mkdir(dir, { recursive: true });
 
         for(let i = 0; i < terraform.length; i++) {
             await fs.writeFile(path.join(dir, `${i}.tf`), terraform[i]);
         }
 
-        logs = 'terraform init';
         let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
-        logs += result.stdout;
-        logs += result.stderr;
+        if(debug && result.stdout) console.log(result.stdout);
 
-        logs += 'terraform validate';
         result = await execa.command('terraform validate', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
-        logs += result.stdout;
-        logs += result.stderr;
+        if(debug && result.stdout) console.log(result.stdout);
 
-        logs += 'terraform plan';
         result = await execa.command('terraform plan -out _plan', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
-        logs += result.stdout;
-        logs += result.stderr;
+        if(debug && result.stdout) console.log(result.stdout);
 
         result = await execa.command('terraform show -json _plan', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
+        if(debug && result.stdout) console.log(result.stdout);
+
         return JSON.parse(result.stdout);
     } finally {
-        await _cleanupDir(dir);
-        if (debug) {
-            console.log(logs);
+        if(ci.isCI) {
+            await fs.rmdir(dir, { recursive: true });
+        } else {
+            const files = await fs.readdir(dir);
+            for(file of files) {
+                if(file != '.terraform') {
+                    await fs.unlink(path.join(dir, file));
+                }
+            }
         }
     }
 };
