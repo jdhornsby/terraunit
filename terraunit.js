@@ -157,6 +157,16 @@ provider "aws" {
 `;
 };
 
+const _cleanupDir = async (dir) => {
+    await fs.mkdir(dir, { recursive: true });
+    const files = await fs.readdir(dir);
+    for(file of files) {
+        if(file != '.terraform') {
+            await fs.unlink(path.join(dir, file));
+        }
+    }
+};
+
 function Terraunit() {
 };
 
@@ -199,7 +209,7 @@ Terraunit.prototype.plan = async (options) => {
     const dir = path.join(workingDirectory, '__terraunit__');
     let logs = '';
     try {
-        await fs.mkdir(dir, { recursive: true });
+        await _cleanupDir(dir);
 
         for(let i = 0; i < terraform.length; i++) {
             await fs.writeFile(path.join(dir, `${i}.tf`), terraform[i]);
@@ -223,7 +233,7 @@ Terraunit.prototype.plan = async (options) => {
         result = await execa.command('terraform show -json _plan', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
         return JSON.parse(result.stdout);
     } finally {
-        fs.rmdir(dir, { recursive: true });
+        await _cleanupDir(dir);
         if (debug) {
             console.log(logs);
         }
