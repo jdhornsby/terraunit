@@ -159,9 +159,9 @@ provider "aws" {
 const _debugOn = (debugMode) => {
     if (process.env.TERRAUNIT_DEBUG) debugMode = process.env.TERRAUNIT_DEBUG;
     
-    if (Terraunit.prototype.DEBUG_MODE.ALL == debugMode) return true;
-    if (Terraunit.prototype.DEBUG_MODE.CI == debugMode && ci.isCI) return true;
-    if (Terraunit.prototype.DEBUG_MODE.LOCAL == debugMode && !ci.isCI) return true;
+    if (Terraunit.DEBUG_MODE.ALL == debugMode) return true;
+    if (Terraunit.DEBUG_MODE.CI == debugMode && ci.isCI) return true;
+    if (Terraunit.DEBUG_MODE.LOCAL == debugMode && !ci.isCI) return true;
 
     return false;
 };
@@ -170,7 +170,7 @@ function Terraunit() {
 
 };
 
-Terraunit.prototype.DEBUG_MODE = {
+Terraunit.DEBUG_MODE = {
     ALL: 'ALL',
     CI: 'CI',
     LOCAL: 'LOCAL',
@@ -202,7 +202,7 @@ Terraunit.prototype.plan = async (options) => {
         workingDirectory = process.cwd(),
         mockAWSProvider = true,
         mockAWSProviderAlias = '',
-        debugMode = this.DEBUG_MODE.LOCAL
+        debugMode = Terraunit.DEBUG_MODE.LOCAL
     } = options || {};
 
     if(!Array.isArray(terraform)) {
