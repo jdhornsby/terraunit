@@ -92,7 +92,6 @@ provider "aws" {
         iotanalytics           = "http://localhost:9999"
         iotevents              = "http://localhost:9999"
         kafka                  = "http://localhost:9999"
-        kinesis_analytics      = "http://localhost:9999"
         kinesis                = "http://localhost:9999"
         kinesisanalytics       = "http://localhost:9999"
         kinesisvideo           = "http://localhost:9999"
@@ -120,7 +119,6 @@ provider "aws" {
         pricing                = "http://localhost:9999"
         qldb                   = "http://localhost:9999"
         quicksight             = "http://localhost:9999"
-        r53                    = "http://localhost:9999"
         ram                    = "http://localhost:9999"
         rds                    = "http://localhost:9999"
         redshift               = "http://localhost:9999"
@@ -158,7 +156,25 @@ provider "aws" {
 `;
 };
 
+const _debugOn = (debugMode) => {
+    if (process.env.TERRAUNIT_DEBUG) debugMode = process.env.TERRAUNIT_DEBUG;
+    
+    if (Terraunit.prototype.DEBUG_MODE.ALL == debugMode) return true;
+    if (Terraunit.prototype.DEBUG_MODE.CI == debugMode && ci.isCI) return true;
+    if (Terraunit.prototype.DEBUG_MODE.LOCAL == debugMode && !ci.isCI) return true;
+
+    return false;
+};
+
 function Terraunit() {
+
+};
+
+Terraunit.prototype.DEBUG_MODE = {
+    ALL: 'ALL',
+    CI: 'CI',
+    LOCAL: 'LOCAL',
+    OFF: 'OFF'
 };
 
 Terraunit.prototype.start = (options) => {
@@ -186,7 +202,7 @@ Terraunit.prototype.plan = async (options) => {
         workingDirectory = process.cwd(),
         mockAWSProvider = true,
         mockAWSProviderAlias = '',
-        debug = false
+        debugMode = this.DEBUG_MODE.LOCAL
     } = options || {};
 
     if(!Array.isArray(terraform)) {
@@ -196,6 +212,8 @@ Terraunit.prototype.plan = async (options) => {
     if(mockAWSProvider) {
         terraform.push(_getMockAWSProvider(mockAWSProviderAlias));
     }
+
+    const debug = _debugOn(debugMode);
 
     const dir = path.join(workingDirectory, '__terraunit__');
     try {

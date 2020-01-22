@@ -16,8 +16,7 @@ test('I can test a Terraform plan.', async () => {
                 type  = "String"
                 value = "bar"
             }`
-        ],
-        debug: true
+        ]
     });
     expect(plan.planned_values.root_module.resources[0].name).toBe('foo');
     expect(plan.planned_values.root_module.resources[0].values.value).toBe('bar');
