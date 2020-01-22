@@ -223,16 +223,16 @@ Terraunit.prototype.plan = async (options) => {
             await fs.writeFile(path.join(dir, `${i}.tf`), terraform[i]);
         }
 
-        let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
+        let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
         if(debug && result.stdout) console.log(result.stdout);
 
-        result = await execa.command('terraform validate', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
+        result = await execa.command('terraform validate', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
         if(debug && result.stdout) console.log(result.stdout);
 
-        result = await execa.command('terraform plan -out _plan', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
+        result = await execa.command('terraform plan -out _plan', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
         if(debug && result.stdout) console.log(result.stdout);
 
-        result = await execa.command('terraform show -json _plan', { cwd: dir, env: {TF_LOG: debug ? 'DEBUG' : 'ERROR'} });
+        result = await execa.command('terraform show -json _plan', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
         if(debug && result.stdout) console.log(result.stdout);
 
         return JSON.parse(result.stdout);
