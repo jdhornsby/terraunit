@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const execa = require('execa');
 const ci = require('ci-info');
+const del = require('del');
 
 const _getMockAWSProvider = (alias) => {
     if(alias) {
@@ -198,19 +199,20 @@ Terraunit.prototype.stop = async () => {
 
 Terraunit.prototype.plan = async (options) => {
     const {
-        terraform = [],
         workingDirectory = process.cwd(),
-        mockAWSProvider = true,
-        mockAWSProviderAlias = '',
+        configurations = [],
+        providers = [{
+            type: 'aws',
+            alias: '',
+            fileName: 'providers.tf'
+        }],
         debugMode = Terraunit.DEBUG_MODE.LOCAL
     } = options || {};
 
-    if(!Array.isArray(terraform)) {
-        throw 'Expected terraform to be an array of terraform HCL.';
-    }
-
-    if(mockAWSProvider) {
-        terraform.push(_getMockAWSProvider(mockAWSProviderAlias));
+    for(provider of providers) {
+        if (provider.type == 'aws' && !provider.content) {
+            provider.content = _getMockAWSProvider(provider.alias);
+        }
     }
 
     const debug = _debugOn(debugMode);
@@ -219,8 +221,15 @@ Terraunit.prototype.plan = async (options) => {
     try {
         await fs.mkdir(dir, { recursive: true });
 
-        for(let i = 0; i < terraform.length; i++) {
-            await fs.writeFile(path.join(dir, `${i}.tf`), terraform[i]);
+        const terraform = configurations.concat(providers);
+        for(tf of terraform) {
+            const {fileName = 'main.tf'} = tf;
+            const filePath = path.join(dir, fileName);
+            const subdir = path.dirname(filePath);
+            if(subdir) {
+                await fs.mkdir(subdir, { recursive: true });
+            }
+            await fs.appendFile(filePath, tf.content);
         }
 
         let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
@@ -240,12 +249,7 @@ Terraunit.prototype.plan = async (options) => {
         if(ci.isCI) {
             await fs.rmdir(dir, { recursive: true });
         } else {
-            const files = await fs.readdir(dir);
-            for(file of files) {
-                if(file != '.terraform') {
-                    await fs.unlink(path.join(dir, file));
-                }
-            }
+            await del([dir + '/*', '!*/.terraform']);
         }
     }
 };

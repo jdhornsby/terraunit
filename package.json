@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "ci-info": "^2.0.0",
+    "del": "^5.1.0",
     "execa": "^4.0.0"
   }
 }
