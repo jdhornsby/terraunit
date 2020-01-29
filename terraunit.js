@@ -3,11 +3,12 @@ const fs = require('fs').promises;
 const path = require('path');
 const execa = require('execa');
 const ci = require('ci-info');
-const del = require('del');
 
 const _getMockAWSProvider = (alias) => {
     if(alias) {
         alias = `alias                       = "${alias}"`;
+    } else {
+        alias = '';
     }
     return `
 provider "aws" {
@@ -167,6 +168,28 @@ const _debugOn = (debugMode) => {
     return false;
 };
 
+const _find = (o, matcher, context) => {
+    if(!o) {
+        return;
+    }
+
+    if(matcher(o)) {
+        context.result = o;
+    } else if(Array.isArray(o)) {
+        for(i of o) {
+            if(typeof i === 'object') {
+                _find(i, matcher, context);
+            }
+        }
+    } else if(typeof o === 'object') {
+        for(key of Object.keys(o)) {
+            if(typeof o[key] === 'object') {
+                _find(o[key], matcher, context);
+            }
+        }
+    }
+};
+
 function Terraunit() {
 
 };
@@ -201,35 +224,36 @@ Terraunit.prototype.plan = async (options) => {
     const {
         workingDirectory = process.cwd(),
         configurations = [],
-        providers = [{
-            type: 'aws',
-            alias: '',
-            fileName: 'providers.tf'
-        }],
         debugMode = Terraunit.DEBUG_MODE.LOCAL
     } = options || {};
 
-    for(provider of providers) {
-        if (provider.type == 'aws' && !provider.content) {
-            provider.content = _getMockAWSProvider(provider.alias);
+    for (configuration of configurations) {
+        if (!configuration.content) {
+            configuration.content = '';
+        }
+        if (!configuration.fileName) {
+            configuration.fileName = 'main.tf';
+        }
+        if (configuration.mockProviderType === 'aws') {
+            configuration.content = _getMockAWSProvider(configuration.mockProviderAlias);
         }
     }
 
     const debug = _debugOn(debugMode);
 
-    const dir = path.join(workingDirectory, '__terraunit__');
+    const files = new Set();
     try {
+        const dir = path.join(workingDirectory, '__terraunit__');
         await fs.mkdir(dir, { recursive: true });
 
-        const terraform = configurations.concat(providers);
-        for(tf of terraform) {
-            const {fileName = 'main.tf'} = tf;
-            const filePath = path.join(dir, fileName);
+        for(configuration of configurations) {
+            const filePath = path.join(dir, configuration.fileName);
             const subdir = path.dirname(filePath);
             if(subdir) {
                 await fs.mkdir(subdir, { recursive: true });
             }
-            await fs.appendFile(filePath, tf.content);
+            await fs.appendFile(filePath, configuration.content);
+            files.add(filePath);
         }
 
         let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
@@ -244,12 +268,18 @@ Terraunit.prototype.plan = async (options) => {
         result = await execa.command('terraform show -json _plan', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
         if(debug && result.stdout) console.log(result.stdout);
 
-        return JSON.parse(result.stdout);
+        const plan = JSON.parse(result.stdout);
+        return {
+            plan: plan,
+            find: (matcher) => {
+                const context = {};
+                _find(plan, matcher, context);
+                return context.result;
+            }
+        };
     } finally {
-        if(ci.isCI) {
-            await fs.rmdir(dir, { recursive: true });
-        } else {
-            await del([dir + '/*', '!*/.terraform']);
+        for(file of files) {
+            await fs.unlink(file);
         }
     }
 };

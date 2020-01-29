@@ -16,20 +16,54 @@ beforeAll(() => {
 });
 
 test('I can test a Terraform plan.', async () => {
-    const plan = await terraunit.plan({
-        terraform: [
-            `resource "aws_ssm_parameter" "foo" {
+    const result = await terraunit.plan({
+        configurations: [{
+            mockProviderType: 'aws'  
+        },
+        {
+            content: `resource "aws_ssm_parameter" "foo" {
                 name  = "foo"
                 type  = "String"
                 value = "bar"
             }`
-        ]
+        }]
     });
-    expect(plan.planned_values.root_module.resources[0].name).toBe('foo');
-    expect(plan.planned_values.root_module.resources[0].values.value).toBe('bar');
+    expect(result.find(r => r.type == 'aws_ssm_parameter' && r.name == 'foo')).toBeTruthy();
 });
 
 afterAll(async () => {
     terraunit.stop();
 });
+```
+
+The plan method takes an object with the following structure:
+```js
+const options = {
+    //the root workspace directory, defaults to cwd
+    workingDirectory: process.cwd(),
+    //an array of terraform configuration objects
+    configurations: [{
+        //raw terraform configuration data
+        content: `...`,
+        //the filename to store the config in
+        // defaults to main.tf
+        fileName: 'main.tf',
+        //this configuration is a mock provider
+        // will override content with a mock proviedr
+        // supports:
+        // - aws
+        mockProviderType: '',
+        //add an alias to this mock provider
+        // defaults to no alias
+        mockProviderAlias: '',
+        //debug mode
+        // Supports:
+        // - ALL: full debug everywhere
+        // - CI: debug during CI only
+        // - LOCAL: debug locally only
+        // - OFF: no debug
+        // defaults to LOCAL
+        debugMode: Terraunit.DEBUG_MODE.LOCAL
+    }]
+}
 ```
