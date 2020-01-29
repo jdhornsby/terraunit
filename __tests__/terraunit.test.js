@@ -9,8 +9,11 @@ beforeAll(() => {
 });
 
 test('I can test a Terraform plan.', async () => {
-    const plan = await terraunit.plan({
+    const result = await terraunit.plan({
         configurations: [{
+            mockProviderType: 'aws'  
+        },
+        {
             content: `resource "aws_ssm_parameter" "foo" {
                 name  = "foo"
                 type  = "String"
@@ -18,13 +21,15 @@ test('I can test a Terraform plan.', async () => {
             }`
         }]
     });
-    expect(plan.planned_values.root_module.resources[0].name).toBe('foo');
-    expect(plan.planned_values.root_module.resources[0].values.value).toBe('bar');
+    expect(result.find(r => r.type == 'aws_ssm_parameter' && r.name == 'foo' && r.values && r.values.value == 'bar')).toBeTruthy();
 });
 
 test('I can test a Terraform plan with a module.', async () => {
-    const plan = await terraunit.plan({
+    const result = await terraunit.plan({
         configurations: [{
+            mockProviderType: 'aws'  
+        },
+        {
             fileName: 'module/main.tf',
             content: `resource "aws_ssm_parameter" "foo" {
                     name  = "foo"
@@ -40,12 +45,11 @@ test('I can test a Terraform plan with a module.', async () => {
             `
         }]
     });
-    expect(plan.planned_values.root_module.child_modules[0].resources[0].name).toBe('foo');
-    expect(plan.planned_values.root_module.child_modules[0].resources[0].values.value).toBe('bar');
+    expect(result.find(r => r.type == 'aws_ssm_parameter' && r.name == 'foo' && r.values && r.values.value == 'bar')).toBeTruthy();
 });
 
 test('I can test a Terraform plan with a module with provider overriding.', async () => {
-    const plan = await terraunit.plan({
+    const result = await terraunit.plan({
         configurations: [{
             fileName: 'module/main.tf',
             content: `provider "aws" {
@@ -64,19 +68,17 @@ test('I can test a Terraform plan with a module with provider overriding.', asyn
             content: `module "test" {
                 source = "./module"
                 providers = {
-                    aws.a = "aws.x"
+                    aws.a = aws.x
                 }
             }
             `
-        }],
-        providers: [{
-            type: 'aws',
-            alias: 'x',
-            fileName: 'providers.tf'
+        },
+        {
+            mockProviderType: 'aws',
+            mockProviderAlias: 'x'
         }]
     });
-    expect(plan.planned_values.root_module.child_modules[0].resources[0].name).toBe('foo');
-    expect(plan.planned_values.root_module.child_modules[0].resources[0].values.value).toBe('bar');
+    expect(result.find(r => r.type == 'aws_ssm_parameter' && r.name == 'foo' && r.values && r.values.value == 'bar')).toBeTruthy();
 });
 
 afterAll(async () => {
