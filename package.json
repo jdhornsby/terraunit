@@ -1,6 +1,6 @@
 {
   "name": "terraunit",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "A library for unit testing Terraform modules.",
   "main": "terraunit.js",
   "scripts": {
@@ -24,7 +24,9 @@
     "jest": "^24.9.0"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
     "ci-info": "^2.0.0",
-    "execa": "^4.0.0"
+    "execa": "^4.0.0",
+    "express": "^4.17.1"
   }
 }

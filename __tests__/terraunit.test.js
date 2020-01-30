@@ -81,6 +81,24 @@ test('I can test a Terraform plan with a module with provider overriding.', asyn
     expect(result.find(r => r.type == 'aws_ssm_parameter' && r.name == 'foo' && r.values && r.values.value == 'bar')).toBeTruthy();
 });
 
+test('I can get the current aws account id.', async () => {
+    const result = await terraunit.plan({
+        configurations: [{
+            mockProviderType: 'aws'  
+        },
+        {
+            content: `data "aws_caller_identity" "current" {}
+            
+            resource "aws_ssm_parameter" "foo" {
+                name  = "foo"
+                type  = "String"
+                value = data.aws_caller_identity.current.account_id
+            }`
+        }]
+    });
+    expect(result.find(r => r.type == 'aws_ssm_parameter' && r.name == 'foo' && r.values)).toBeTruthy();
+});
+
 afterAll(async () => {
     terraunit.stop();
 });

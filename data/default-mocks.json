@@ -1,0 +1,17 @@
+[
+    {
+        "id": "default",
+        "statusCode": 401,
+        "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Errors><Error><Code>AuthFailure</Code><Message>This is a mock endpoint!</Message></Error></Errors><RequestID>dfb4b595-9956-4b63-9cf1-572bd46804a4</RequestID></Response>"
+    },
+    {
+        "id": "sts:GetCallerIdentity",
+        "statusCode": 200,
+        "body": "<GetCallerIdentityResponse xmlns=\"https://sts.amazonaws.com/doc/2011-06-15/\"><GetCallerIdentityResult><Arn>arn:aws:iam::123456789012:user/Alice</Arn><UserId>AIDACKCEVSQ6C2EXAMPLE</UserId><Account>123456789012</Account></GetCallerIdentityResult><ResponseMetadata><RequestId>01234567-89ab-cdef-0123-456789abcdef</RequestId></ResponseMetadata></GetCallerIdentityResponse>"
+    },
+    {
+        "id": "ec2:DescribeAccountAttributes",
+        "statusCode": 200,
+        "body": "<DescribeAccountAttributesResponse xmlns=\"http://ec2.amazonaws.com/doc/2016-11-15/\"><requestId>7a62c49f-347e-4fc4-9331-6e8eEXAMPLE</requestId><accountAttributeSet><item><attributeName>vpc-max-security-groups-per-interface</attributeName><attributeValueSet><item><attributeValue>5</attributeValue></item></attributeValueSet></item><item><attributeName>max-instances</attributeName><attributeValueSet><item><attributeValue>20</attributeValue></item></attributeValueSet></item><item><attributeName>supported-platforms</attributeName><attributeValueSet><item><attributeValue>EC2</attributeValue></item><item><attributeValue>VPC</attributeValue></item></attributeValueSet></item><item><attributeName>default-vpc</attributeName><attributeValueSet><item><attributeValue>none</attributeValue></item></attributeValueSet></item><item><attributeName>max-elastic-ips</attributeName><attributeValueSet><item><attributeValue>5</attributeValue></item></attributeValueSet></item><item><attributeName>vpc-max-elastic-ips</attributeName><attributeValueSet><item><attributeValue>5</attributeValue></item></attributeValueSet></item></accountAttributeSet></DescribeAccountAttributesResponse>"
+    }
+]
