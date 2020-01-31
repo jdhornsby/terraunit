@@ -2,17 +2,12 @@ const MockAWS = require('./mock-aws-api');
 const fs = require('fs').promises;
 const path = require('path');
 const execa = require('execa');
-const ci = require('ci-info');
+const { DEBUG_MODE, isDebugModeOn } = require('./utils');
 
-Terraunit.DEBUG_MODE = {
-    ALL: 'ALL',
-    CI: 'CI',
-    LOCAL: 'LOCAL',
-    OFF: 'OFF'
-};
-
-function Terraunit(options) {
+function Terraunit(options = {}) {
     this.mockAws = new MockAWS(options);
+    this.port = options.port || 9999;
+    this.debugMode = options.debugMode || DEBUG_MODE.LOCAL;
 
     this.start = () => {
         this.mockAws.start();
@@ -55,7 +50,7 @@ function Terraunit(options) {
                 files.add(filePath);
             }
             
-            const debug = this._isDebugOn();
+            const debug = isDebugModeOn(this.debugMode);
 
             let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
             if(debug && result.stdout) console.log(result.stdout);
