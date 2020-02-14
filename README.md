@@ -6,7 +6,7 @@ A node.js based helper for unit testing (AWS) Terraform.
 
 The goal of Terraunit it so enable a really fast, totally local unit testing feedback loop while developing Terraform modules. It is intended to complement integration tests, rather than replace them.
 
-At its core, it is just a simple local mock AWS API and a set of scripts for getting your module to talk to them. You can instatiate your module, run a plan, and then look for expected resources in that plan.
+At its core, it is just a simple local mock AWS API and a set of scripts for getting your module to talk to them. You can instantiate your module, run a plan, and then look for expected resources in that plan. With this approach, you can run through many configurations in a few seconds and catch many classes of errors faster than going through a full test cycle.
 
 It is currently written in node.js with the intention of integrating with Jest. This is mostly of out convenience and might change in future versions.
 
