@@ -1,6 +1,6 @@
 const Terraunit = require('../terraunit');
 
-const terraunit = new Terraunit();
+const terraunit = new Terraunit({unitName: 'example'});
 
 jest.setTimeout(60000); // Terraform can take a bit to run a plan...
 

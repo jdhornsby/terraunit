@@ -3,11 +3,15 @@ const fs = require('fs').promises;
 const path = require('path');
 const execa = require('execa');
 const { DEBUG_MODE, isDebugModeOn } = require('./utils');
+const portfinder = require('portfinder-sync');
 
 function Terraunit(options = {}) {
+    if (!options.port) {
+        options.port = portfinder.getPort(9000);
+    }
     this.mockAws = new MockAWS(options);
-    this.port = options.port || 9999;
     this.debugMode = options.debugMode || DEBUG_MODE.LOCAL;
+    this.unitName = options.unitName || '';
 
     this.start = () => {
         this.mockAws.start();
@@ -37,7 +41,7 @@ function Terraunit(options = {}) {
     
         const files = new Set();
         try {
-            const dir = path.join(workingDirectory, '__terraunit__');
+            const dir = path.join(workingDirectory, '__terraunit__', this.unitName);
             await fs.mkdir(dir, { recursive: true });
     
             for(configuration of configurations) {
@@ -52,16 +56,23 @@ function Terraunit(options = {}) {
             
             const debug = isDebugModeOn(this.debugMode);
 
-            let result = await execa.command('terraform init', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
+            const env = {
+                TF_LOG: debug ? 'TRACE' : '',
+                TF_PLUGIN_CACHE_DIR: path.join(workingDirectory, '__terraunit__', 'plugin-cache')
+            };
+            
+            await fs.mkdir(env.TF_PLUGIN_CACHE_DIR, { recursive: true });
+
+            let result = await execa.command('terraform init', { cwd: dir, env });
             if(debug && result.stdout) console.log(result.stdout);
     
-            result = await execa.command('terraform validate', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
+            result = await execa.command('terraform validate', { cwd: dir, env });
             if(debug && result.stdout) console.log(result.stdout);
     
-            result = await execa.command('terraform plan -out _plan', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
+            result = await execa.command('terraform plan -out _plan', { cwd: dir, env });
             if(debug && result.stdout) console.log(result.stdout);
     
-            result = await execa.command('terraform show -json _plan', { cwd: dir, env: {TF_LOG: debug ? 'TRACE' : ''} });
+            result = await execa.command('terraform show -json _plan', { cwd: dir, env });
             if(debug && result.stdout) console.log(result.stdout);
     
             files.add(path.join(dir, '_plan'));
