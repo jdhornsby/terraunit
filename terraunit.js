@@ -7,7 +7,7 @@ const portfinder = require('portfinder-sync');
 
 function Terraunit(options = {}) {
     if (!options.port) {
-        options.port = portfinder.getPort(9000);
+        options.port = portfinder.getPort(9000 + Math.floor(Math.random() * Math.floor(999)));
     }
     this.mockAws = new MockAWS(options);
     this.debugMode = options.debugMode || DEBUG_MODE.LOCAL;
@@ -60,7 +60,7 @@ function Terraunit(options = {}) {
                 TF_LOG: debug ? 'TRACE' : '',
                 TF_PLUGIN_CACHE_DIR: path.join(workingDirectory, '__terraunit__', 'plugin-cache')
             };
-            
+
             await fs.mkdir(env.TF_PLUGIN_CACHE_DIR, { recursive: true });
 
             let result = await execa.command('terraform init', { cwd: dir, env });

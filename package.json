@@ -1,6 +1,6 @@
 {
   "name": "terraunit",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "A library for unit testing Terraform modules.",
   "main": "terraunit.js",
   "scripts": {
