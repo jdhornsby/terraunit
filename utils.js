@@ -8,7 +8,7 @@ DEBUG_MODE = {
 };
 
 const isDebugModeOn = (options) => {
-    let _debugMode = this.debugMode || DEBUG_MODE.LOCAL;
+    let _debugMode = options || DEBUG_MODE.LOCAL;
 
     if (process.env.TERRAUNIT_DEBUG) _debugMode = process.env.TERRAUNIT_DEBUG;
 
